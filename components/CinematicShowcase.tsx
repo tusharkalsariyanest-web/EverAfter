@@ -78,7 +78,6 @@ export default function CinematicShowcase({ reels }: CinematicShowcaseProps) {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40vw] h-[40vw] bg-[#5A2A2F]/20 rounded-full blur-[100px] pointer-events-none z-0" />
 
       {/* HEADER TEXT (Restored!) */}
-      <div className="relative z-20 text-center w-full px-6 flex flex-col items-center justify-center"></div>
 
       {/* HORIZONTAL CAROUSEL */}
       <div className="relative z-10 w-full max-w-[1400px] h-[400px] md:h-[500px] lg:h-[580px] mt-6 flex justify-center items-center perspective-[1000px]">
