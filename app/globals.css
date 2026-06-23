@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Pure White Background */
+    --background: 0 0% 100%;
+    --foreground: 20 14.3% 4.1%;
+    /* Deep Charcoal */
+
+    /* Card/Paper Off-White */
+    --card: 60 5% 96%;
+    /* slightly warm gray */
+    --card-foreground: 24 9.8% 10%;
+
+    /* THE GOLD ACCENT (Extracted from your logo vibe) */
+    --primary: 38 45% 55%;
+    /* #C5A059 - Muted Luxury Gold */
+    --primary-foreground: 60 9.1% 97.8%;
+
+    /* Muted Text */
+    --muted: 60 4.8% 95.9%;
+    --muted-foreground: 25 5.3% 44.7%;
+
+    /* Borders */
+    --border: 20 5.9% 90%;
+    --input: 20 5.9% 90%;
+    --ring: 38 45% 55%;
+    /* Focus ring is Gold */
+
+    /* Border Radius - Sharp for Luxury */
+    --radius: 0px;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Add the fonts classes here later */
