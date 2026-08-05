@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Lato, Great_Vibes } from "next/font/google";
 import "./globals.css";
-
+import Providers from "./providers";
 import Navbar from "@/components/Navbar";
 import ChatButton from "@/components/ChatButton";
 import "@uploadthing/react/styles.css";
@@ -67,14 +67,16 @@ export default function RootLayout({
       <body
         className={`${playfair.variable} ${lato.variable} ${greatVibes.variable} font-sans antialiased bg-[#050505]`}
       >
-        <Navbar />
+        <Providers>
+          <Navbar />
 
-        <CartDrawer />
+          <CartDrawer />
 
-        <main className="relative min-h-screen bg-[#050505]">{children}</main>
+          <main className="relative min-h-screen bg-[#050505]">{children}</main>
 
-        <ChatButton />
-        <Toaster position="top-center" richColors />
+          <ChatButton />
+          <Toaster position="top-center" richColors />
+        </Providers>
       </body>
     </html>
   );

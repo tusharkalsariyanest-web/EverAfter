@@ -1,18 +1,27 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  const session = request.cookies.get('admin_session');
-  const isPathAdmin = request.nextUrl.pathname.startsWith('/admin');
+export default auth((req) => {
+  const { nextUrl } = req;
 
-  // If trying to access admin and no session, redirect to login
-  if (isPathAdmin && !session) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  // Existing admin authentication
+  if (nextUrl.pathname.startsWith("/admin")) {
+    const session = req.cookies.get("admin_session");
+
+    if (!session) {
+      return NextResponse.redirect(new URL("/login", req.url));
+    }
+  }
+
+  // Protect user profile
+  if (nextUrl.pathname.startsWith("/profile") && !req.auth) {
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   return NextResponse.next();
-}
+});
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ["/admin/:path*", "/profile/:path*"],
 };

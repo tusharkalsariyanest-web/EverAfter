@@ -1,72 +1,43 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image"; // <-- Added for avatar
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Sparkles, ShoppingBag, User, Loader2 } from "lucide-react"; // <-- Added User & Loader2
+import { Camera, Sparkles, ShoppingBag, Loader2 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
-
-// 🔥 Import Firebase configuration
-import { auth } from "@/lib/firebase";
-import {
-  onAuthStateChanged,
-  GoogleAuthProvider,
-  signInWithPopup,
-  User as FirebaseUser,
-} from "firebase/auth";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
-  // 🔥 Authentication State
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { data: session, status } = useSession();
+  const user = session?.user;
+  const authLoading = status === "loading";
 
-  // Cart configuration
   const { items, openCart } = useCartStore();
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
+  const handleGoogleLogin = async () => {
+    await signIn("google", {
+      callbackUrl: "/profile",
+    });
+  };
+
   useEffect(() => {
     setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+      setScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll);
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  // 🔥 Listen for auth changes across the site
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // 🔥 Premium Google Sign-In Handler
-  const handleGoogleLogin = async () => {
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-
-      // Sync the new user to your PostgreSQL database in the background
-      await fetch("/api/auth/sync", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: result.user.uid,
-          name: result.user.displayName,
-          email: result.user.email,
-        }),
-      });
-    } catch (error) {
-      console.error("Google Auth Sync Failed:", error);
-    }
-  };
 
   const links = [
     { name: "The Collection", path: "/" },
@@ -118,11 +89,9 @@ export default function Navbar() {
             </p>
           </Link>
 
-          {/* RIGHT SIDE: Auth + Cart + Hamburger */}
           <div className="flex items-center justify-end gap-4 md:gap-5">
-            {/* 🔥 DYNAMIC PROFILE ARCHITECTURE */}
             {isMounted && (
-              <div className="flex items-center">
+              <div className="flex items-center gap-3">
                 {authLoading ? (
                   <Loader2
                     className={`animate-spin ${
@@ -131,63 +100,60 @@ export default function Navbar() {
                     size={18}
                   />
                 ) : user ? (
-                  /* LOGGED IN: Render Google Avatar */
-                  <Link
-                    href="/profile"
-                    className={`relative w-7 h-7 md:w-8 md:h-8 rounded-full overflow-hidden border transition-all shadow-sm block hover:scale-105 ${
-                      scrolled
-                        ? "border-[#C0858B] hover:border-[#8c363e]"
-                        : "border-white/40 hover:border-white"
-                    }`}
-                  >
-                    <Image
-                      src={user.photoURL || "/placeholder-user.png"}
-                      alt="Account Dashboard"
-                      fill
-                      className="object-cover"
-                    />
+                  // ✅ Avatar directly navigates to /profile
+                  <Link href="/profile" className="outline-none">
+                    <div
+                      className={`relative w-8 h-8 rounded-full overflow-hidden border transition-all hover:scale-105 ${
+                        scrolled
+                          ? "border-[#C0858B] hover:border-[#8c363e]"
+                          : "border-white/40 hover:border-white"
+                      }`}
+                    >
+                      <Image
+                        src={user.image || "/placeholder-user.png"}
+                        alt="Profile"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   </Link>
                 ) : (
-                  /* GUEST: Render Login Button */
                   <button
                     onClick={handleGoogleLogin}
-                    className={`flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold transition-colors px-3 py-1.5 rounded-full border ${
+                    className={`text-[10px] uppercase tracking-widest transition-colors ${
                       scrolled
-                        ? "text-[#8A4A52] hover:text-[#2d1b1b] bg-white/40 border-[#E8D0D2]"
-                        : "text-[#FDF6F5] hover:text-white bg-black/20 border-white/20"
+                        ? "text-[#8c363e] hover:text-[#2d1b1b]"
+                        : "text-white hover:text-[#d99898]"
                     }`}
                   >
-                    <User size={12} />
-                    <span className="hidden sm:inline">Sign In</span>
+                    Sign In
                   </button>
                 )}
+
+                <button
+                  onClick={openCart}
+                  className={`relative transition-colors ${
+                    scrolled
+                      ? "text-[#2d1b1b] hover:text-[#8c363e]"
+                      : "text-[#FDF6F5] hover:text-[#d99898]"
+                  }`}
+                >
+                  <ShoppingBag size={20} strokeWidth={1.5} />
+                  {isMounted && totalItems > 0 && (
+                    <span
+                      className={`absolute -top-1.5 -right-2 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center border ${
+                        scrolled
+                          ? "bg-[#8c363e] border-white"
+                          : "bg-[#8c363e] border-transparent"
+                      }`}
+                    >
+                      {totalItems}
+                    </span>
+                  )}
+                </button>
               </div>
             )}
 
-            {/* CART BUTTON */}
-            <button
-              onClick={openCart}
-              className={`relative transition-colors ${
-                scrolled
-                  ? "text-[#2d1b1b] hover:text-[#8c363e]"
-                  : "text-[#FDF6F5] hover:text-[#d99898]"
-              }`}
-            >
-              <ShoppingBag size={20} strokeWidth={1.5} />
-              {isMounted && totalItems > 0 && (
-                <span
-                  className={`absolute -top-1.5 -right-2 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center border ${
-                    scrolled
-                      ? "bg-[#8c363e] border-white"
-                      : "bg-[#8c363e] border-transparent"
-                  }`}
-                >
-                  {totalItems}
-                </span>
-              )}
-            </button>
-
-            {/* HAMBURGER MENU */}
             <button
               onClick={() => setOpen(true)}
               className={`transition-colors flex flex-col gap-1.5 py-2 pl-2 ${

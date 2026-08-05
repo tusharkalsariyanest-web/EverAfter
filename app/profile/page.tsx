@@ -14,13 +14,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import Image from "next/image";
 
-// IMPORTANT: Adjust this import to match where your Firebase auth is initialized!
-import { auth } from "@/lib/firebase";
-import {
-  onAuthStateChanged,
-  signOut,
-  User as FirebaseUser,
-} from "firebase/auth";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 // Helper to dynamically route the tracking ID to the correct website
 const getTrackingUrl = (courier: string | null, awb: string) => {
@@ -38,33 +32,41 @@ const getTrackingUrl = (courier: string | null, awb: string) => {
 };
 
 export default function ProfilePage() {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const { data: session, status } = useSession();
+  console.log("STATUS:", status);
+  console.log("SESSION:", session);
+
+  const user = session?.user;
   const [orderHistory, setOrderHistory] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 1. Listen for Google Login State
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
+    if (status === "loading") return;
 
-      if (currentUser) {
-        // Fetch their orders using the API we just created
-        try {
-          const res = await fetch(`/api/orders/user/${currentUser.uid}`);
-          const data = await res.json();
-          if (Array.isArray(data)) {
-            setOrderHistory(data);
-          }
-        } catch (error) {
-          console.error("Failed to fetch orders", error);
-        }
-      }
+    // Not logged in
+    if (!session?.user?.id) {
       setLoading(false);
-    });
+      return;
+    }
 
-    return () => unsubscribe();
-  }, []);
+    const loadOrders = async () => {
+      try {
+        const res = await fetch(`/api/orders/user/${session.user.id}`);
+        const data = await res.json();
 
+        if (Array.isArray(data)) {
+          setOrderHistory(data);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOrders();
+  }, [status, session]);
   if (loading) {
     return (
       <div className="min-h-screen bg-[#FDF6F5] flex items-center justify-center">
@@ -73,7 +75,7 @@ export default function ProfilePage() {
     );
   }
 
-  if (!user) {
+  if (!session) {
     return (
       <div className="min-h-screen bg-[#FDF6F5] font-sans selection:bg-[#C0858B] selection:text-white">
         <Navbar />
@@ -87,9 +89,7 @@ export default function ProfilePage() {
             your premium shipments.
           </p>
           <button
-            onClick={() => {
-              /* Trigger your existing Google Login flow here */
-            }}
+            onClick={() => signIn("google")}
             className="bg-[#8c363e] text-white px-8 py-3 rounded-full text-xs uppercase tracking-widest font-bold shadow-lg hover:bg-[#6b272f] transition-all"
           >
             Log In / Register
@@ -110,7 +110,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[#E8D0D2] shadow-sm">
               <Image
-                src={user.photoURL || "/placeholder-user.png"}
+                src={user?.image || "/placeholder-user.png"}
                 alt="Profile"
                 width={80}
                 height={80}
@@ -119,13 +119,13 @@ export default function ProfilePage() {
             </div>
             <div>
               <h1 className="font-serif text-2xl md:text-3xl text-[#2d1b1b] tracking-tight">
-                {user.displayName}
+                {user?.name}
               </h1>
-              <p className="text-sm text-gray-500 font-medium">{user.email}</p>
+              <p className="text-sm text-gray-500 font-medium">{user?.email}</p>
             </div>
           </div>
           <button
-            onClick={() => signOut(auth)}
+            onClick={() => signOut({ callbackUrl: "/" })}
             className="flex items-center gap-2 text-xs uppercase tracking-widest font-bold text-[#8A4A52] hover:text-[#2d1b1b] transition-colors"
           >
             <LogOut size={16} /> Sign Out

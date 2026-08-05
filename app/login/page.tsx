@@ -1,15 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Lock, Sparkles } from "lucide-react";
+import Script from "next/script";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  // Initialize the global callback for Google OAuth
+  useEffect(() => {
+    // @ts-ignore
+    window.handleGoogleSuccess = async (response: any) => {
+      setIsLoading(true);
+      try {
+        // Send Google's JWT token to your backend sync route
+        const res = await fetch("/api/auth/sync", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token: response.credential }),
+        });
+
+        if (res.ok) {
+          toast.success("Welcome to the Studio via Google");
+          router.push("/admin");
+          router.refresh();
+        } else {
+          toast.error("Google authentication failed.");
+        }
+      } catch (error) {
+        toast.error("An error occurred during Google sync.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +65,13 @@ export default function LoginPage() {
   };
 
   return (
-    // Cinematic Dark Background with subtle gradients
     <div className="min-h-screen flex items-center justify-center bg-[#0a0a0a] relative overflow-hidden font-sans">
+      {/* Official Google Identity Services Script */}
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="afterInteractive"
+      />
+
       {/* Ambient background glows */}
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#8c363e]/20 rounded-full blur-[120px] pointer-events-none" />
       <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#d99898]/10 rounded-full blur-[120px] pointer-events-none" />
@@ -93,6 +127,38 @@ export default function LoginPage() {
             {isLoading ? "Authenticating..." : "Enter Dashboard"}
           </button>
         </form>
+
+        {/* Divider */}
+        <div className="mt-6 flex items-center justify-center space-x-4">
+          <div className="h-px bg-white/10 flex-1" />
+          <span className="text-[10px] uppercase tracking-widest text-white/40">
+            OR
+          </span>
+          <div className="h-px bg-white/10 flex-1" />
+        </div>
+
+        {/* Hidden configuration div for Google */}
+        <div
+          id="g_id_onload"
+          data-client_id={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID}
+          data-context="signin"
+          data-ux_mode="popup"
+          data-callback="handleGoogleSuccess"
+          data-auto_prompt="false"
+        ></div>
+
+        {/* Rendered Google Sign-in Button */}
+        <div className="mt-6 flex justify-center">
+          <div
+            className="g_id_signin"
+            data-type="standard"
+            data-shape="rectangular"
+            data-theme="filled_black"
+            data-text="signin_with"
+            data-size="large"
+            data-logo_alignment="left"
+          ></div>
+        </div>
       </div>
     </div>
   );
