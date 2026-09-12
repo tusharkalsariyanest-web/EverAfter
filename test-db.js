@@ -1,0 +1,17 @@
+import 'dotenv/config';
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from "./db/schema.js"; // Note: this might fail because schema.ts is TS
+
+const sql = neon(process.env.DATABASE_URL);
+const db = drizzle(sql, { schema });
+
+async function test() {
+  try {
+    const users = await db.query.users.findFirst();
+    console.log("Users query successful:", users);
+  } catch (err) {
+    console.error("Error querying users:", err.message);
+  }
+}
+test();

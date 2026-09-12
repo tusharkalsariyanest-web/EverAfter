@@ -21,30 +21,43 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   callbacks: {
     async signIn({ user }) {
-      if (!user.email) return false;
+      try {
+        console.log("NextAuth signIn callback started for user:", user.email);
+        if (!user.email) {
+          console.error("No email provided by Google.");
+          return false;
+        }
 
-      const existingUser = await db.query.users.findFirst({
-        where: eq(users.email, user.email),
-      });
-
-      if (!existingUser) {
-        await db.insert(users).values({
-          id: crypto.randomUUID(),
-          name: user.name,
-          email: user.email,
-          image: user.image,
+        const existingUser = await db.query.users.findFirst({
+          where: eq(users.email, user.email),
         });
-      } else {
-        await db
-          .update(users)
-          .set({
-            name: user.name,
-            image: user.image,
-          })
-          .where(eq(users.email, user.email));
-      }
 
-      return true;
+        if (!existingUser) {
+          console.log("User not found, creating new user...");
+          await db.insert(users).values({
+            id: crypto.randomUUID(),
+            name: user.name,
+            email: user.email,
+            image: user.image,
+          });
+          console.log("New user created successfully.");
+        } else {
+          console.log("User found, updating existing user...");
+          await db
+            .update(users)
+            .set({
+              name: user.name,
+              image: user.image,
+            })
+            .where(eq(users.email, user.email));
+          console.log("Existing user updated successfully.");
+        }
+
+        return true;
+      } catch (error) {
+        console.error("FATAL ERROR IN SIGNIN CALLBACK:", error);
+        return false;
+      }
     },
 
     async jwt({ token, user }) {
@@ -72,4 +85,5 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
   trustHost: true,
   secret: process.env.AUTH_SECRET,
+  debug: true,
 });
