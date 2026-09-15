@@ -12,7 +12,7 @@ import {
 import { relations } from "drizzle-orm";
 
 // =========================================================================
-// 1. USER AUTHENTICATION & PROFILES (Firebase Google Auth Sync)
+// 1. USER AUTHENTICATION & PROFILES
 // =========================================================================
 
 export const users = pgTable("users", {
