@@ -70,12 +70,12 @@ export default function CinematicShowcase({ reels }: CinematicShowcaseProps) {
   if (!reels || reels.length === 0) return null;
 
   return (
-    <section className="relative w-full min-h-[90vh] bg-[#171112] pt-24 pb-10 md:pt-28 md:pb-12 overflow-hidden flex flex-col items-center justify-center font-sans">
+    <section className="relative w-full min-h-[90vh] bg-[#1e1314] md:bg-[#171112] pt-24 pb-10 md:pt-28 md:pb-12 overflow-hidden flex flex-col items-center justify-center font-sans">
       {/* EXTRAORDINARY CINEMATIC LIGHTING SYSTEM */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0a0708_100%)] z-0 opacity-90 pointer-events-none" />
-      <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-[#8c363e]/15 rounded-full blur-[120px] pointer-events-none z-0 mix-blend-screen" />
-      <div className="absolute -bottom-[10%] -right-[10%] w-[60vw] h-[60vw] bg-[#d99898]/10 rounded-full blur-[140px] pointer-events-none z-0 mix-blend-screen" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40vw] h-[40vw] bg-[#5A2A2F]/20 rounded-full blur-[100px] pointer-events-none z-0" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,#0a0708_100%)] z-0 opacity-60 md:opacity-90 pointer-events-none" />
+      <div className="absolute -top-[10%] -left-[10%] w-[50vw] h-[50vw] bg-[#8c363e]/20 md:bg-[#8c363e]/15 rounded-full blur-[120px] pointer-events-none z-0 mix-blend-screen" />
+      <div className="absolute -bottom-[10%] -right-[10%] w-[60vw] h-[60vw] bg-[#d99898]/15 md:bg-[#d99898]/10 rounded-full blur-[140px] pointer-events-none z-0 mix-blend-screen" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40vw] h-[40vw] bg-[#5A2A2F]/25 md:bg-[#5A2A2F]/20 rounded-full blur-[100px] pointer-events-none z-0" />
 
       {/* HEADER TEXT (Restored!) */}
 
