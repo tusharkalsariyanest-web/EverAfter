@@ -47,16 +47,6 @@ export default async function ReelsFeed() {
         <ChevronLeft size={22} strokeWidth={1.5} />
       </Link>
 
-      {/* Rinku Video Lab watermark (Pushed down to align with the back button) */}
-      <div className="fixed top-12 right-4 md:top-8 md:right-8 z-[60] text-center opacity-40 select-none pointer-events-none drop-shadow-md">
-        <p className="font-serif text-base md:text-lg tracking-tight leading-none text-[#FDF6F5]">
-          Rinku
-        </p>
-        <p className="text-[6px] md:text-[7px] uppercase tracking-[0.4em] text-[#d99898] -mt-0.5">
-          Video Lab
-        </p>
-      </div>
-
       {reelsWithData.length === 0 ? (
         // Styled the empty state to match the new dark/rose aesthetic
         <div className="flex items-center justify-center h-full text-center p-10 bg-[#1a0f0f]">

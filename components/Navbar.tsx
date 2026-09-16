@@ -230,6 +230,11 @@ export default function Navbar() {
 
   const closeDrawer = useCallback(() => setDrawerOpen(false), []);
 
+  // Hide the navbar entirely on the reels feed for a full-screen cinematic experience
+  if (pathname === "/reels") {
+    return null;
+  }
+
   return (
     <>
       {/* ═══════════════════════════════════════════════════════════════

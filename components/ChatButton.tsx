@@ -3,10 +3,12 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X } from "lucide-react";
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export default function ChatButton() {
   const [showGreeting, setShowGreeting] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const pathname = usePathname();
   const phoneNumber = "9377603050";
 
   // Updated romantic bridal inquiry message
@@ -33,6 +35,8 @@ export default function ChatButton() {
     const timer = setTimeout(() => setShowGreeting(true), 3000);
     return () => clearTimeout(timer);
   }, [isMobile]);
+
+  if (pathname === "/reels") return null;
 
   return (
     <div className="fixed bottom-5 right-5 md:bottom-8 md:right-8 z-[150] flex flex-col items-end gap-3">
