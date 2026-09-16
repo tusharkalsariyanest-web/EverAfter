@@ -2,28 +2,44 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Camera, Sparkles, ShoppingBag, Loader2 } from "lucide-react";
+import {
+  ShoppingBag,
+  Loader2,
+  Menu,
+  X,
+  User,
+  LogOut,
+  ChevronRight,
+} from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
+
+const NAV_LINKS = [
+  { name: "Home", path: "/" },
+  { name: "Prewedding", path: "/category/prewedding" },
+  { name: "Maternity", path: "/category/maternity" },
+  { name: "Bridal", path: "/category/bridal" },
+  { name: "Reels", path: "/reels" },
+];
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   const { data: session, status } = useSession();
   const user = session?.user;
   const authLoading = status === "loading";
+  const pathname = usePathname();
 
   const { items, openCart } = useCartStore();
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
   const handleGoogleLogin = async () => {
-    await signIn("google", {
-      callbackUrl: "/profile",
-    });
+    await signIn("google", { callbackUrl: "/profile" });
   };
 
   useEffect(() => {
@@ -31,210 +47,371 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 10);
-    };
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const links = [
-    { name: "The Collection", path: "/" },
-    { name: "Cinematic Reels", path: "/reels" },
-    { name: "Prewedding", path: "/category/prewedding" },
-    { name: "Maternity", path: "/category/maternity" },
-    { name: "Bridal", path: "/category/bridal" },
-  ];
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    if (drawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [drawerOpen]);
+
+  const closeDrawer = useCallback(() => setDrawerOpen(false), []);
+
+  // Determine text color based on scroll state
+  // Scrolled = dark bg → light text. Unscrolled = transparent over hero → light text.
+  // Both states use light text, but scrolled has the dark glass background for contrast.
+  const textColor = scrolled ? "text-[#FDF6F5]" : "text-[#FDF6F5]";
+  const textMuted = scrolled ? "text-[#d4a3a7]" : "text-[#d99898]";
+  const hoverColor = scrolled
+    ? "hover:text-white"
+    : "hover:text-white";
 
   return (
     <>
+      {/* ═══════════════════════════════════════════════════════════════
+          MAIN NAVBAR
+      ═══════════════════════════════════════════════════════════════ */}
       <nav
-        className={`fixed top-0 z-[100] w-full transition-all duration-700 ease-in-out ${
+        className={`fixed top-0 z-[100] w-full transition-all duration-500 ease-out ${
           scrolled
-            ? "bg-[#FDF6F5]/90 backdrop-blur-xl py-3 shadow-[0_10px_30px_rgba(140,54,62,0.05)] border-b border-[#E8D0D2]/40"
-            : "bg-transparent py-6"
+            ? "bg-[#1a0f10]/92 backdrop-blur-2xl py-2.5 shadow-[0_4px_30px_rgba(0,0,0,0.3)]"
+            : "bg-gradient-to-b from-black/40 via-black/15 to-transparent py-4 md:py-5"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-6 flex items-center justify-between relative">
-          <div className="w-20 hidden md:block">
-            <p
-              className={`text-[8px] uppercase tracking-[0.4em] font-bold flex items-center gap-1.5 transition-colors duration-500 ${
-                scrolled ? "text-[#8c363e]" : "text-[#d99898]"
-              }`}
-            >
-              <Camera size={10} /> Studio
-            </p>
-          </div>
+        {/* Top Bar */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between h-12 md:h-14">
+            {/* ── LEFT: Hamburger (mobile) + Desktop Nav ── */}
+            <div className="flex items-center gap-6 w-[140px] md:w-auto">
+              {/* Mobile Hamburger */}
+              <button
+                onClick={() => setDrawerOpen(true)}
+                className={`md:hidden p-2 -ml-2 transition-colors ${textColor} ${hoverColor}`}
+                aria-label="Open Menu"
+              >
+                <Menu size={22} strokeWidth={1.5} />
+              </button>
 
-          <Link
-            href="/"
-            className="text-center select-none group absolute left-1/2 -translate-x-1/2 flex flex-col items-center"
-          >
-            <h1
-              className={`font-serif text-[28px] md:text-[34px] tracking-tight leading-none transition-colors duration-500 ${
-                scrolled ? "text-[#2d1b1b]" : "text-[#FDF6F5]"
-              }`}
-            >
-              Everafter
-            </h1>
-            <p
-              className={`text-[7px] uppercase tracking-[0.5em] mt-1.5 transition-all duration-500 ${
-                scrolled
-                  ? "opacity-0 h-0 overflow-hidden text-[#8c363e]"
-                  : "opacity-100 text-[#d99898]"
-              }`}
-            >
-              The Cinematic Wardrobe
-            </p>
-          </Link>
-
-          <div className="flex items-center justify-end gap-4 md:gap-5">
-            {isMounted && (
-              <div className="flex items-center gap-3">
-                {authLoading ? (
-                  <Loader2
-                    className={`animate-spin ${
-                      scrolled ? "text-[#C0858B]" : "text-[#d99898]"
-                    }`}
-                    size={18}
-                  />
-                ) : user ? (
-                  // ✅ Avatar directly navigates to /profile
-                  <Link href="/profile" className="outline-none">
-                    <div
-                      className={`relative w-8 h-8 rounded-full overflow-hidden border transition-all hover:scale-105 ${
-                        scrolled
-                          ? "border-[#C0858B] hover:border-[#8c363e]"
-                          : "border-white/40 hover:border-white"
+              {/* Desktop Links */}
+              <div className="hidden md:flex items-center gap-7">
+                {NAV_LINKS.map((link) => {
+                  const isActive = pathname === link.path;
+                  return (
+                    <Link
+                      key={link.name}
+                      href={link.path}
+                      className={`relative text-[11px] uppercase tracking-[0.18em] font-medium transition-colors duration-300 py-1 ${
+                        isActive
+                          ? "text-white"
+                          : `${textMuted} ${hoverColor}`
                       }`}
                     >
-                      <Image
-                        src={user.image || "/placeholder-user.png"}
-                        alt="Profile"
-                        fill
-                        className="object-cover"
-                      />
-                    </div>
-                  </Link>
-                ) : (
-                  <button
-                    onClick={handleGoogleLogin}
-                    className={`text-[10px] uppercase tracking-widest transition-colors ${
-                      scrolled
-                        ? "text-[#8c363e] hover:text-[#2d1b1b]"
-                        : "text-white hover:text-[#d99898]"
-                    }`}
-                  >
-                    Sign In
-                  </button>
-                )}
-
-                <button
-                  onClick={openCart}
-                  className={`relative transition-colors ${
-                    scrolled
-                      ? "text-[#2d1b1b] hover:text-[#8c363e]"
-                      : "text-[#FDF6F5] hover:text-[#d99898]"
-                  }`}
-                >
-                  <ShoppingBag size={20} strokeWidth={1.5} />
-                  {isMounted && totalItems > 0 && (
-                    <span
-                      className={`absolute -top-1.5 -right-2 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center border ${
-                        scrolled
-                          ? "bg-[#8c363e] border-white"
-                          : "bg-[#8c363e] border-transparent"
-                      }`}
-                    >
-                      {totalItems}
-                    </span>
-                  )}
-                </button>
+                      {link.name}
+                      {/* Active indicator dot */}
+                      {isActive && (
+                        <motion.span
+                          layoutId="nav-indicator"
+                          className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#d99898]"
+                          transition={{
+                            type: "spring",
+                            stiffness: 380,
+                            damping: 30,
+                          }}
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
               </div>
-            )}
+            </div>
 
-            <button
-              onClick={() => setOpen(true)}
-              className={`transition-colors flex flex-col gap-1.5 py-2 pl-2 ${
-                scrolled
-                  ? "text-[#2d1b1b] hover:text-[#8c363e]"
-                  : "text-[#FDF6F5] hover:text-[#d99898]"
-              }`}
-              aria-label="Open Menu"
+            {/* ── CENTER: Logo ── */}
+            <Link
+              href="/"
+              className="absolute left-1/2 -translate-x-1/2 select-none group flex flex-col items-center"
             >
-              <span className="w-6 h-[1px] bg-current block transition-all"></span>
-              <span className="w-4 h-[1px] bg-current block transition-all ml-auto"></span>
-            </button>
+              <h1
+                className={`font-serif text-[24px] sm:text-[28px] md:text-[32px] tracking-tight leading-none transition-all duration-500 ${textColor}`}
+              >
+                Everafter
+              </h1>
+              <span
+                className={`text-[6px] sm:text-[7px] uppercase tracking-[0.5em] mt-1 transition-all duration-500 ${
+                  scrolled
+                    ? "opacity-0 h-0 overflow-hidden"
+                    : "opacity-70 text-[#d99898]"
+                }`}
+              >
+                The Cinematic Wardrobe
+              </span>
+            </Link>
+
+            {/* ── RIGHT: Cart + User ── */}
+            <div className="flex items-center justify-end gap-3 sm:gap-4 w-[140px] md:w-auto">
+              {isMounted && (
+                <>
+                  {/* Sign In / Avatar */}
+                  {authLoading ? (
+                    <Loader2
+                      className={`animate-spin ${textMuted}`}
+                      size={18}
+                    />
+                  ) : user ? (
+                    <Link
+                      href="/profile"
+                      className="outline-none"
+                      aria-label="Profile"
+                    >
+                      <div
+                        className={`relative w-8 h-8 rounded-full overflow-hidden ring-2 transition-all duration-300 hover:scale-110 ${
+                          scrolled
+                            ? "ring-[#d99898]/50 hover:ring-[#d99898]"
+                            : "ring-white/30 hover:ring-white/70"
+                        }`}
+                      >
+                        <Image
+                          src={user.image || "/placeholder-user.png"}
+                          alt="Profile"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </Link>
+                  ) : (
+                    <button
+                      onClick={handleGoogleLogin}
+                      className={`hidden sm:flex items-center gap-1.5 text-[10px] uppercase tracking-[0.15em] font-medium transition-all duration-300 px-3 py-1.5 rounded-full border ${
+                        scrolled
+                          ? "border-[#d99898]/30 text-[#d99898] hover:bg-[#d99898]/10 hover:text-white hover:border-[#d99898]/60"
+                          : "border-white/20 text-white/80 hover:bg-white/10 hover:text-white hover:border-white/40"
+                      }`}
+                    >
+                      <User size={12} />
+                      Sign In
+                    </button>
+                  )}
+
+                  {/* Cart */}
+                  <button
+                    onClick={openCart}
+                    className={`relative p-2 -mr-2 transition-all duration-300 ${textColor} ${hoverColor}`}
+                    aria-label="Shopping Cart"
+                  >
+                    <ShoppingBag size={20} strokeWidth={1.5} />
+                    {isMounted && totalItems > 0 && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute top-0.5 right-0 w-4 h-4 text-white text-[9px] font-bold rounded-full flex items-center justify-center bg-[#8c363e] ring-2 ring-[#1a0f10]/80"
+                      >
+                        {totalItems}
+                      </motion.span>
+                    )}
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
+        {/* Subtle gold accent line at bottom when scrolled */}
         <div
-          className={`absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[#8c363e]/20 to-transparent transition-opacity duration-700 ${
+          className={`absolute bottom-0 left-0 w-full h-px transition-opacity duration-500 ${
             scrolled ? "opacity-100" : "opacity-0"
           }`}
-        />
+        >
+          <div className="w-full h-full bg-gradient-to-r from-transparent via-[#d99898]/40 to-transparent" />
+        </div>
       </nav>
 
-      {/* MENU DRAWER */}
+      {/* ═══════════════════════════════════════════════════════════════
+          MOBILE DRAWER MENU
+      ═══════════════════════════════════════════════════════════════ */}
       <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-            animate={{ opacity: 1, backdropFilter: "blur(12px)" }}
-            exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
-            transition={{ duration: 0.4 }}
-            className="fixed inset-0 z-[200] bg-[#171112]/95 flex flex-col overflow-hidden"
-          >
-            <div className="absolute top-[-20%] left-[-10%] w-[60vw] h-[60vw] bg-[#8c363e]/30 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] bg-[#d99898]/20 rounded-full blur-[80px] pointer-events-none" />
+        {drawerOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm"
+              onClick={closeDrawer}
+            />
 
-            <div className="flex justify-between items-center p-6 lg:p-10 relative z-10">
-              <div className="text-left">
-                <p className="text-[10px] uppercase tracking-[0.4em] text-[#d99898] font-bold flex items-center gap-2">
-                  <Sparkles size={12} /> Navigation
+            {/* Drawer Panel */}
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 28, stiffness: 300 }}
+              className="fixed top-0 left-0 bottom-0 z-[201] w-[85vw] max-w-[380px] bg-[#130b0c] flex flex-col overflow-hidden"
+            >
+              {/* Ambient Glow */}
+              <div className="absolute top-[-15%] right-[-30%] w-[60vw] h-[60vw] bg-[#8c363e]/15 rounded-full blur-[100px] pointer-events-none" />
+              <div className="absolute bottom-[-10%] left-[-20%] w-[40vw] h-[40vw] bg-[#d99898]/10 rounded-full blur-[80px] pointer-events-none" />
+
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 pt-6 pb-4 relative z-10">
+                <h2 className="font-serif text-xl text-[#FDF6F5] tracking-tight">
+                  Everafter
+                </h2>
+                <button
+                  onClick={closeDrawer}
+                  className="p-2 -mr-2 text-[#d99898] hover:text-white transition-colors"
+                  aria-label="Close Menu"
+                >
+                  <X size={22} strokeWidth={1.5} />
+                </button>
+              </div>
+
+              {/* Divider */}
+              <div className="mx-6 h-px bg-gradient-to-r from-[#d99898]/20 via-[#d99898]/10 to-transparent" />
+
+              {/* Navigation Links */}
+              <nav className="flex-1 px-6 py-8 overflow-y-auto relative z-10">
+                <p className="text-[9px] uppercase tracking-[0.4em] text-[#d99898]/60 font-semibold mb-6">
+                  Collections
+                </p>
+                <div className="space-y-1">
+                  {NAV_LINKS.map((link, i) => {
+                    const isActive = pathname === link.path;
+                    return (
+                      <motion.div
+                        key={link.name}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          delay: 0.1 + i * 0.06,
+                          ease: [0.21, 1.11, 0.81, 0.99],
+                        }}
+                      >
+                        <Link
+                          href={link.path}
+                          onClick={closeDrawer}
+                          className={`flex items-center justify-between py-3.5 px-3 rounded-xl transition-all duration-300 group ${
+                            isActive
+                              ? "bg-[#8c363e]/15 text-white"
+                              : "text-[#d4a3a7] hover:text-white hover:bg-white/5"
+                          }`}
+                        >
+                          <span className="text-[13px] uppercase tracking-[0.2em] font-medium">
+                            {link.name}
+                          </span>
+                          <ChevronRight
+                            size={14}
+                            className={`transition-all duration-300 ${
+                              isActive
+                                ? "text-[#d99898] opacity-100"
+                                : "opacity-0 group-hover:opacity-50 -translate-x-2 group-hover:translate-x-0"
+                            }`}
+                          />
+                        </Link>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
+                {/* User Section in Drawer */}
+                <div className="mt-10">
+                  <div className="h-px bg-gradient-to-r from-[#d99898]/20 via-[#d99898]/10 to-transparent mb-6" />
+                  <p className="text-[9px] uppercase tracking-[0.4em] text-[#d99898]/60 font-semibold mb-4">
+                    Account
+                  </p>
+
+                  {authLoading ? (
+                    <div className="flex items-center gap-3 px-3 py-3">
+                      <Loader2
+                        className="animate-spin text-[#d99898]"
+                        size={18}
+                      />
+                      <span className="text-[12px] text-[#d99898]/70">
+                        Loading...
+                      </span>
+                    </div>
+                  ) : user ? (
+                    <div className="space-y-2">
+                      <Link
+                        href="/profile"
+                        onClick={closeDrawer}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-[#d4a3a7] hover:text-white hover:bg-white/5 transition-all"
+                      >
+                        <div className="relative w-8 h-8 rounded-full overflow-hidden ring-2 ring-[#d99898]/30">
+                          <Image
+                            src={user.image || "/placeholder-user.png"}
+                            alt="Profile"
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div>
+                          <p className="text-[12px] font-medium tracking-wide">
+                            {user.name || "Profile"}
+                          </p>
+                          <p className="text-[10px] text-[#d99898]/50">
+                            View Profile
+                          </p>
+                        </div>
+                      </Link>
+                      <button
+                        onClick={() => {
+                          closeDrawer();
+                          signOut();
+                        }}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-[#d4a3a7]/60 hover:text-red-400 hover:bg-red-400/5 transition-all w-full"
+                      >
+                        <LogOut size={16} />
+                        <span className="text-[12px] uppercase tracking-[0.15em]">
+                          Sign Out
+                        </span>
+                      </button>
+                    </div>
+                  ) : (
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 }}
+                    >
+                      <button
+                        onClick={() => {
+                          closeDrawer();
+                          handleGoogleLogin();
+                        }}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl text-[#d4a3a7] hover:text-white hover:bg-white/5 transition-all w-full"
+                      >
+                        <User size={18} />
+                        <span className="text-[13px] uppercase tracking-[0.2em] font-medium">
+                          Sign In
+                        </span>
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              </nav>
+
+              {/* Footer */}
+              <div className="px-6 py-6 relative z-10">
+                <div className="h-px bg-gradient-to-r from-[#d99898]/20 via-[#d99898]/10 to-transparent mb-5" />
+                <p className="text-[8px] uppercase tracking-[0.5em] text-[#d99898]/30 mb-1">
+                  EverAfter Studio
+                </p>
+                <p className="font-serif italic text-[11px] text-[#d99898]/40">
+                  Capturing perfection, one frame at a time.
                 </p>
               </div>
-              <button
-                onClick={() => setOpen(false)}
-                className="text-[#FDF6F5] text-[10px] uppercase tracking-widest hover:text-[#d99898] transition-colors flex items-center gap-2"
-              >
-                Close ✕
-              </button>
-            </div>
-
-            <div className="flex-1 flex flex-col items-center justify-center gap-8 pb-20 relative z-10">
-              {links.map((link, i) => (
-                <motion.div
-                  key={link.name}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    delay: 0.1 + i * 0.08,
-                    ease: [0.21, 1.11, 0.81, 0.99],
-                  }}
-                >
-                  <Link
-                    href={link.path}
-                    onClick={() => setOpen(false)}
-                    className="text-[#FDF6F5] uppercase tracking-[0.3em] text-sm md:text-base hover:text-[#d99898] transition-colors flex flex-col items-center group relative"
-                  >
-                    {link.name}
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#d99898] absolute -bottom-4 opacity-0 group-hover:opacity-100 transition-all duration-300 transform scale-50 group-hover:scale-100"></span>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="text-center pb-10 relative z-10">
-              <p className="text-[8px] uppercase tracking-[0.5em] text-[#d99898]/50 mb-2">
-                The Collection
-              </p>
-              <p className="font-serif italic text-white/40 text-xs">
-                Capturing perfection.
-              </p>
-            </div>
-          </motion.div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>

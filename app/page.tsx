@@ -5,7 +5,6 @@ import Image from "next/image";
 import { desc, eq } from "drizzle-orm";
 import { ChevronRight, Sparkles, ShieldCheck, Camera } from "lucide-react";
 import Footer from "@/components/Footer";
-import Navbar from "@/components/Navbar";
 import CinematicShowcase from "@/components/CinematicShowcase";
 
 export default async function Home() {
@@ -41,7 +40,6 @@ export default async function Home() {
 
   return (
     <div className="w-full bg-[#FDF6F5] font-sans selection:bg-[#C0858B] selection:text-white">
-      <Navbar />
 
       {/* 1. CINEMATIC SPOTLIGHT */}
       {reelsForShowcase.length > 0 ? (
